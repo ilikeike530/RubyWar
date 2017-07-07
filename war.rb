@@ -22,10 +22,11 @@ end
 class Deck
 	# include Enumerable
 
-	attr_reader :cards
+	attr_accessor :cards, :owner
 
-	def initialize
+	def initialize (owner="")
 		@cards = []
+		@owner = owner
 	end
 
 	def create_cards
@@ -65,24 +66,40 @@ end
 
 
 def battle(p1_draw_stack, p1_capture_stack, p2_draw_stack, p2_capture_stack)
-	player1_card = p1_draw_stack.cards.shift
-	player2_card = p2_draw_stack.cards.shift
+	player1_card = p1_draw_stack.cards.shift; print "#{p1_draw_stack.owner}'s card: #{player1_card} | "
+	player2_card = p2_draw_stack.cards.shift; puts "#{p2_draw_stack.owner}'s card: #{player2_card}"
 	if player1_card.value > player2_card.value
 		p1_capture_stack.cards.push(player1_card, player2_card)
+		return "Player 1 Wins battle"
 	elsif player2_card.value > player1_card.value
 		p2_capture_stack.cards.push(player1_card, player2_card)
+		return "Player 2 wins battle"
 	elsif player1_card.value == player2_card.value
-		breaktie(player1_card,p1_draw_stack, p1_capture_stack,
+		deal3(player1_card,p1_draw_stack, p1_capture_stack,
 							player2_card,p2_draw_stack, p2_capture_stack)
 	end
 end
 
-def breaktie(player1_card,p1_draw_stack, p1_capture_stack,
+def deal3(player1_card,p1_draw_stack, p1_capture_stack,
 							player2_card,p2_draw_stack, p2_capture_stack)
 	player1_facedown_stack = Deck.new
 	player2_facedown_stack = Deck.new
 	# add something about shuffling if under 4 cards here
 	3.times { player1_facedown_stack.cards.push(p1_draw_stack.cards.shift) }
+	3.times { player2_facedown_stack.cards.push(p2_draw_stack.cards.shift) }
+	winner_from_4th_card = battle(p1_draw_stack,p1_capture_stack, p1_draw_stack,p1_capture_stack) 
+	if winner_from_4th_card == "Player 1 Wins battle"
+		p1_capture_stack.cards += player1_facedown_stack.cards + player2_facedown_stack.cards
+	elsif winner_from_4th_card == "Player 2 Wins battle"
+		p2_capture_stack.cards += player1_facedown_stack.cards + player2_facedown_stack.cards
+	end
+
+
+	puts player1_card
+	player1_facedown_stack.cards.each {|card| puts card }
+	puts player2_card
+	player2_facedown_stack.cards.each {|card| puts card }
+
 
 end
 
@@ -111,8 +128,8 @@ end
 # end
 
 full_deck = Deck.new
-player1_draw_stack = Deck.new
-player2_draw_stack = Deck.new
+player1_draw_stack = Deck.new("Ape H.")
+player2_draw_stack = Deck.new("Skynet")
 player1_capture_stack = Deck.new
 player2_capture_stack = Deck.new
 full_deck.create_cards
@@ -128,7 +145,7 @@ battle(player1_draw_stack, player1_capture_stack,
 
 
 
-# full_deck.player1_stack.each {|card| puts card }
+# full_deck.cards.each {|card| puts card }
 
 
 
