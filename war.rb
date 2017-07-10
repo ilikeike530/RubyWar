@@ -21,7 +21,9 @@ end
 
 
 class Deck
-
+	
+	include Enumerable
+	
 	attr_accessor :cards
 
 	def initialize
@@ -57,6 +59,11 @@ class Deck
 			end
 		end
 	end
+
+	def each
+		@cards.each {|card| yield card}
+	end
+
 end
 
 
@@ -75,20 +82,32 @@ end
 
 
 def battle(p1, p2)
-	p1.draw_card = p1.draw_stack.cards.shift; print "#{p1.name}'s card: #{p1.draw_card} \t|\t"
+	check_and_reshuffle(p1, p2)
+	p1.draw_card = p1.draw_stack.cards.shift; print "#{p1.name}'s card: #{p1.draw_card} \t│\t"
 	p2.draw_card = p2.draw_stack.cards.shift; puts "#{p2.name}'s card: #{p2.draw_card}"
 	if p1.draw_card.value > p2.draw_card.value
 		p1.capture_stack.cards.push(p1.draw_card, p2.draw_card)
-		p1.capture_stack.cards.concat(p1.stack_for_ties.cards, p2.stack_for_ties.cards)
-		p1.stack_for_ties = []
-		p2.stack_for_ties = []
-		puts "Player 1 wins battle"
+		# puts "ITS PLAYER 1 YO" 							# for debugging
+		# puts p1.capture_stack.cards 				# for debugging
+		# puts p1.capture_stack.cards.length	# for debugging
+		# puts p1.stack_for_ties.cards 				# for debugging
+		# puts p1.stack_for_ties.cards.length # for debugging
+		# puts p1.stack_for_ties.cards.class 	# for debugging
+		p1.capture_stack.cards.concat(p1.stack_for_ties.cards)
+		p1.capture_stack.cards.concat(p2.stack_for_ties.cards)
+		p1.stack_for_ties.cards = []
+		p2.stack_for_ties.cards = []
+		puts " --Battle Winner--  │"
+		status(p1,p2)
 	elsif p2.draw_card.value > p1.draw_card.value
 		p2.capture_stack.cards.push(p1.draw_card, p2.draw_card)
-		p2.capture_stack.cards.concat(p1.stack_for_ties.cards, p2.stack_for_ties.cards)
-		p1.stack_for_ties = []
-		p2.stack_for_ties = []
-		puts "Player 2 wins battle"
+		# puts "ITS PLAYER 2 YO" 							# for debugging
+		p2.capture_stack.cards.concat(p1.stack_for_ties.cards)
+		p2.capture_stack.cards.concat(p2.stack_for_ties.cards)
+		p1.stack_for_ties.cards = []
+		p2.stack_for_ties.cards = []
+		puts "                    │ --Battle Winner--"
+		status(p1,p2)
 	elsif p1.draw_card.value == p2.draw_card.value
 		p1.stack_for_ties.cards.push(p1.draw_card)
 		p2.stack_for_ties.cards.push(p2.draw_card)
@@ -101,7 +120,7 @@ def break_tie(p1, p2)
 	# add something about shuffling if under 4 cards here and having to shuffle
 	3.times do 
 		p1.stack_for_ties.cards.push(p1.draw_stack.cards.shift)
-		print "#{p1.name}'s card: #{p1.stack_for_ties.cards.last} \t|\t"
+		print "#{p1.name}'s card: #{p1.stack_for_ties.cards.last} \t│\t"
 		p2.stack_for_ties.cards.push(p2.draw_stack.cards.shift)
 		puts "#{p2.name}'s card: #{p2.stack_for_ties.cards.last}"
 	end
@@ -109,13 +128,22 @@ def break_tie(p1, p2)
 end
 
 
-def reshuffle(player)
-	# if player.capture_stack.cards.length = 0  #finish this for how to perform the end-game
-	shuffle player.capture_stack
-	player.draw_stack = player.capture_stack
-	player.capture_stack = []
+def check_and_reshuffle(*player)
+  (0..(player.length-1)).each do |x|
+		if player[x].draw_stack.cards.length == 0
+			player[x].capture_stack.shuffle
+			player[x].draw_stack = player[x].capture_stack
+			player[x].capture_stack.cards = []
+		end
+	end
+#finish this for how to perform the end-game
 end
 
+def status (p1, p2)
+	print "#{p1.name} has #{p1.draw_stack.cards.length} #{p1.capture_stack.cards.length} cards │\t"
+	puts "#{p2.name} has #{p2.draw_stack.cards.length} #{p2.capture_stack.cards.length} cards"
+	puts "────────────────────┼─────────────────────"
+end
 
 # puts "Welcome to War! The Card Game."
 # puts "(press 'Q' to Quit at any time)"
@@ -146,16 +174,14 @@ full_deck.create_cards
 full_deck.shuffle
 full_deck.deal(player1.draw_stack, player2.draw_stack)
 
-battle(player1, player2)
-battle(player1, player2)
-
+16.times{ battle(player1, player2) }
 
 puts player1.draw_stack.cards.length
 puts player2.draw_stack.cards.length
 puts player1.capture_stack.cards.length
 puts player2.capture_stack.cards.length
 
-
+# player1.draw_stack.each { |x| puts x }
 
 
 
