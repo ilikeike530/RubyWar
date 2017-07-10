@@ -10,6 +10,7 @@ class Card
 	def to_s
 		case value
 			when 2..10 then "#{value}#{suit}"
+				# other options for '10': ⑩ ⑽ ⒑ ⓾ X 🔟  or from http://www.fileformat.info/
 			when 11 then "J#{suit}"
 			when 12 then "Q#{suit}"
 			when 13 then "K#{suit}"
@@ -20,13 +21,11 @@ end
 
 
 class Deck
-	# include Enumerable
 
-	attr_accessor :cards, :owner
+	attr_accessor :cards
 
-	def initialize (owner="")
+	def initialize
 		@cards = []
-		@owner = owner
 	end
 
 	def create_cards
@@ -58,94 +57,106 @@ class Deck
 			end
 		end
 	end
-
-	# def each
-	# 	@cards.each {|turtles_are_fun| yield turtles_are_fun}
-	# end
 end
 
 
-def battle(p1_draw_stack, p1_capture_stack, p2_draw_stack, p2_capture_stack)
-	player1_card = p1_draw_stack.cards.shift; print "#{p1_draw_stack.owner}'s card: #{player1_card} | "
-	player2_card = p2_draw_stack.cards.shift; puts "#{p2_draw_stack.owner}'s card: #{player2_card}"
-	if player1_card.value > player2_card.value
-		p1_capture_stack.cards.push(player1_card, player2_card)
-		return "Player 1 Wins battle"
-	elsif player2_card.value > player1_card.value
-		p2_capture_stack.cards.push(player1_card, player2_card)
-		return "Player 2 wins battle"
-	elsif player1_card.value == player2_card.value
-		deal3(player1_card,p1_draw_stack, p1_capture_stack,
-							player2_card,p2_draw_stack, p2_capture_stack)
-	end
-end
-
-def deal3(player1_card,p1_draw_stack, p1_capture_stack,
-							player2_card,p2_draw_stack, p2_capture_stack)
-	player1_facedown_stack = Deck.new
-	player2_facedown_stack = Deck.new
-	# add something about shuffling if under 4 cards here
-	3.times { player1_facedown_stack.cards.push(p1_draw_stack.cards.shift) }
-	3.times { player2_facedown_stack.cards.push(p2_draw_stack.cards.shift) }
-	winner_from_4th_card = battle(p1_draw_stack,p1_capture_stack, p1_draw_stack,p1_capture_stack) 
-	if winner_from_4th_card == "Player 1 Wins battle"
-		p1_capture_stack.cards += player1_facedown_stack.cards + player2_facedown_stack.cards
-	elsif winner_from_4th_card == "Player 2 Wins battle"
-		p2_capture_stack.cards += player1_facedown_stack.cards + player2_facedown_stack.cards
-	end
-
-
-	puts player1_card
-	player1_facedown_stack.cards.each {|card| puts card }
-	puts player2_card
-	player2_facedown_stack.cards.each {|card| puts card }
-
-
-end
-
-
-	# if @player1_stack.length == 0
-	# 	shuffle @player1_stack *********************
+class Player
 	
+	attr_accessor :name, :draw_stack, :capture_stack, :stack_for_ties, :draw_card
 
-# def each
-# 	@cards.each { |card| yield card }
-# end
+	def initialize(name)
+		@name = name
+		@draw_stack = Deck.new
+		@capture_stack = Deck.new
+		@stack_for_ties = Deck.new
+	end
+end
+
+
+
+def battle(p1, p2)
+	p1.draw_card = p1.draw_stack.cards.shift; print "#{p1.name}'s card: #{p1.draw_card} \t|\t"
+	p2.draw_card = p2.draw_stack.cards.shift; puts "#{p2.name}'s card: #{p2.draw_card}"
+	if p1.draw_card.value > p2.draw_card.value
+		p1.capture_stack.cards.push(p1.draw_card, p2.draw_card)
+		p1.capture_stack.cards.concat(p1.stack_for_ties.cards, p2.stack_for_ties.cards)
+		p1.stack_for_ties = []
+		p2.stack_for_ties = []
+		puts "Player 1 wins battle"
+	elsif p2.draw_card.value > p1.draw_card.value
+		p2.capture_stack.cards.push(p1.draw_card, p2.draw_card)
+		p2.capture_stack.cards.concat(p1.stack_for_ties.cards, p2.stack_for_ties.cards)
+		p1.stack_for_ties = []
+		p2.stack_for_ties = []
+		puts "Player 2 wins battle"
+	elsif p1.draw_card.value == p2.draw_card.value
+		p1.stack_for_ties.cards.push(p1.draw_card)
+		p2.stack_for_ties.cards.push(p2.draw_card)
+		break_tie(p1, p2)
+	end
+end
+
+
+def break_tie(p1, p2)
+	# add something about shuffling if under 4 cards here and having to shuffle
+	3.times do 
+		p1.stack_for_ties.cards.push(p1.draw_stack.cards.shift)
+		print "#{p1.name}'s card: #{p1.stack_for_ties.cards.last} \t|\t"
+		p2.stack_for_ties.cards.push(p2.draw_stack.cards.shift)
+		puts "#{p2.name}'s card: #{p2.stack_for_ties.cards.last}"
+	end
+	battle(p1, p2)
+end
+
+
+def reshuffle(player)
+	# if player.capture_stack.cards.length = 0  #finish this for how to perform the end-game
+	shuffle player.capture_stack
+	player.draw_stack = player.capture_stack
+	player.capture_stack = []
+end
 
 
 # puts "Welcome to War! The Card Game."
-# puts "(press Q' to Quit at any time)"
+# puts "(press 'Q' to Quit at any time)"
 # print "Enter your name: "
-# player1_name = gets
-# if player1_name.length==0
+# input = gets
+# if input.length==0
 # 	puts "Since you didn't enter a name, I'll call you 'Ape H.'"
-# 	player1_name = "Ape H."
+# 	player1 = Player.new("Ape H.")
+# elsif input == 'Q'
+# 	exit
+# else 
+# 	player1 = Player.new(input)
 # end
 # print "Enter your opponents name (hit 'Enter' to default to 'Computer'): "
-# player2_name = gets
-# if player2_name.length==0
-# 	player2_name = "Skynet"
-# end
+# input = gets
+# if input.length==0
+# 	player2 = Player.new("Skynet")
+# elsif input == 'Q'
+# 	exit
+# else 
+# 	player2 = Player.new(input)
+
+player1 = Player.new("Ape H.")
+player2 = Player.new("Skynet")
 
 full_deck = Deck.new
-player1_draw_stack = Deck.new("Ape H.")
-player2_draw_stack = Deck.new("Skynet")
-player1_capture_stack = Deck.new
-player2_capture_stack = Deck.new
 full_deck.create_cards
 full_deck.shuffle
-full_deck.deal(player1_draw_stack, player2_draw_stack)
-battle(player1_draw_stack, player1_capture_stack, 
-				player2_draw_stack, player2_capture_stack)
+full_deck.deal(player1.draw_stack, player2.draw_stack)
+
+battle(player1, player2)
+battle(player1, player2)
 
 
-# puts player2_draw_stack.cards.length
-# puts player1_capture_stack.cards.length
-# puts player2_capture_stack.cards.length
+puts player1.draw_stack.cards.length
+puts player2.draw_stack.cards.length
+puts player1.capture_stack.cards.length
+puts player2.capture_stack.cards.length
 
 
 
-# full_deck.cards.each {|card| puts card }
 
 
 
