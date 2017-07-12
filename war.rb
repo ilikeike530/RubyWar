@@ -3,11 +3,13 @@
 # 					Statement of who the winner was
 #           counter " This game took 40 turns.  At 2 seconds per turn, it would have taken
 # 							20 minutes to play thisgame
+				#   List most and least cards each player had during the game
 # 	Add a graphical indicator after each turn to show how many cards are left over for each team, i.e:
 #							----------------|---------------------------
 # 	Add an automated mode "A" to Automate, "Q" to quit
 # 	Add something to make sure the lines line up based on the length of a user's name
 # 	Add a delay so the game looks cool and the line moves back and forth
+# 	
 
 
 
@@ -121,7 +123,7 @@ def battle(p1, p2)
 end
 
 
-def break_tie(p1, p2)
+def break_tie(p1, p2)  # I'm not 100% sure how this would work if one player ran out of cards on the 1st of 2nd flip during a 3x battle
 	3.times do 
 		check_and_reshuffle(p1, p2)
 		p1.stack_for_ties.cards.push(p1.draw_stack.cards.shift)
@@ -139,14 +141,13 @@ def check_and_reshuffle(*player)
 		if player[x].draw_stack.cards.length == 0 and
 		player[x].capture_stack.cards.length == 0 and
 		player[x].stack_for_ties.cards.length == 0
-			puts "#{player[x].name} is the loser"
+			game_conclusion(player[0], player[1])
 		end
 		if player[x].draw_stack.cards.length + 
 		player[x].capture_stack.cards.length +
 		player[x].stack_for_ties.cards.length == 52
-			puts "#{player[x].name} Wins!!"
+			game_conclusion(player[0], player[1])
 		end
-		exit
 	end
 
   (0..(player.length-1)).each do |x|
@@ -178,9 +179,6 @@ def check_and_reshuffle(*player)
 			puts player[x].draw_stack.cards.length; puts "HERE again" # for debugging
 		end
 	end
-#finish this for how to perform the end-game - if there are no cards to shuffle
-# if either player has a combined draw stack or captuer stack of zero, perform end game
-# method to cut game short as necessary
 end
 
 def status (p1, p2)
@@ -188,6 +186,19 @@ def status (p1, p2)
 	puts "#{p2.name} has #{p2.draw_stack.cards.length} #{p2.capture_stack.cards.length} cards"
 	puts "────────────────────┼─────────────────────"
 end
+
+def game_conclusion(*player)
+	(0..(player.length-1)).each do |x|
+		if player[x].draw_stack.cards.length + 
+		player[x].capture_stack.cards.length +
+		player[x].stack_for_ties.cards.length == 52
+			puts "#{player[x].name} Wins!!"
+		end
+	end
+	# add all the stuff about game end counts (# of turns) and statistics here
+	exit
+end
+
 
 # puts "Welcome to War! The Card Game."
 # puts "(press 'Q' to Quit at any time)"
@@ -218,7 +229,7 @@ full_deck.create_cards
 full_deck.shuffle
 full_deck.deal(player1.draw_stack, player2.draw_stack)
 
-100.times{ battle(player1, player2) }
+200.times{ battle(player1, player2) }
 
 puts player1.draw_stack.cards.length
 puts player2.draw_stack.cards.length
