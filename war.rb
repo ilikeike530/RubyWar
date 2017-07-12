@@ -1,3 +1,15 @@
+# Functionality to add:
+# 	Add an end game statement, including
+# 					Statement of who the winner was
+#           counter " This game took 40 turns.  At 2 seconds per turn, it would have taken
+# 							20 minutes to play thisgame
+# 	Add a graphical indicator after each turn to show how many cards are left over for each team, i.e:
+#							----------------|---------------------------
+# 	Add an automated mode "A" to Automate, "Q" to quit
+# 	Add something to make sure the lines line up based on the length of a user's name
+# 	Add a delay so the game looks cool and the line moves back and forth
+
+
 
 class Card
 	attr_reader :suit, :value
@@ -87,12 +99,6 @@ def battle(p1, p2)
 	p2.draw_card = p2.draw_stack.cards.shift; puts "#{p2.name}'s card: #{p2.draw_card}"
 	if p1.draw_card.value > p2.draw_card.value
 		p1.capture_stack.cards.push(p1.draw_card, p2.draw_card)
-		# puts "ITS PLAYER 1 YO" 							# for debugging
-		# puts p1.capture_stack.cards 				# for debugging
-		# puts p1.capture_stack.cards.length	# for debugging
-		# puts p1.stack_for_ties.cards 				# for debugging
-		# puts p1.stack_for_ties.cards.length # for debugging
-		# puts p1.stack_for_ties.cards.class 	# for debugging
 		p1.capture_stack.cards.concat(p1.stack_for_ties.cards)
 		p1.capture_stack.cards.concat(p2.stack_for_ties.cards)
 		p1.stack_for_ties.cards = []
@@ -101,7 +107,6 @@ def battle(p1, p2)
 		status(p1,p2)
 	elsif p2.draw_card.value > p1.draw_card.value
 		p2.capture_stack.cards.push(p1.draw_card, p2.draw_card)
-		# puts "ITS PLAYER 2 YO" 							# for debugging
 		p2.capture_stack.cards.concat(p1.stack_for_ties.cards)
 		p2.capture_stack.cards.concat(p2.stack_for_ties.cards)
 		p1.stack_for_ties.cards = []
@@ -117,8 +122,8 @@ end
 
 
 def break_tie(p1, p2)
-	# add something about shuffling if under 4 cards here and having to shuffle
 	3.times do 
+		check_and_reshuffle(p1, p2)
 		p1.stack_for_ties.cards.push(p1.draw_stack.cards.shift)
 		print "#{p1.name}'s card: #{p1.stack_for_ties.cards.last} \t│\t"
 		p2.stack_for_ties.cards.push(p2.draw_stack.cards.shift)
@@ -129,14 +134,53 @@ end
 
 
 def check_and_reshuffle(*player)
+	puts "IM INSIDE THE CHECK AND RESHUFFLE FUNCTION" # for debugging
   (0..(player.length-1)).each do |x|
-		if player[x].draw_stack.cards.length == 0
-			player[x].capture_stack.shuffle
-			player[x].draw_stack = player[x].capture_stack
-			player[x].capture_stack.cards = []
+		if player[x].draw_stack.cards.length == 0 and
+		player[x].capture_stack.cards.length == 0 and
+		player[x].stack_for_ties.cards.length == 0
+			puts "#{player[x].name} is the loser"
+		end
+		if player[x].draw_stack.cards.length + 
+		player[x].capture_stack.cards.length +
+		player[x].stack_for_ties.cards.length == 52
+			puts "#{player[x].name} Wins!!"
+		end
+		exit
+	end
+
+  (0..(player.length-1)).each do |x|
+		if player[x].draw_stack.cards.length == 0 and player[x].capture_stack.cards.length == 0
+			(0..(player.length-1)).each do |x|
+				player[x].stack_for_ties.shuffle
+				player[x].draw_stack.cards.concat(player[x].stack_for_ties.cards)
+				player[x].stack_for_ties.cards = []
+			end
 		end
 	end
-#finish this for how to perform the end-game
+	
+  (0..(player.length-1)).each do |x|
+		if player[x].draw_stack.cards.length == 0
+			puts "IM INSIDE THE IF STATEMENT*****************************" # for debugging
+			# player[x].capture_stack.cards.each { |card| puts "#{card} prior to shuffle" }  # for debugging
+			player[x].capture_stack.shuffle
+			player[x].draw_stack.cards.each { |card| puts "#{card} draw stack pre transfer" }  # for debugging
+			puts player[x].draw_stack.object_id				# for debugging
+			puts player[x].capture_stack.object_id		# for debugging
+			player[x].draw_stack = player[x].capture_stack.dup  # could I have just used concat
+			puts player[x].draw_stack.object_id				# for debugging
+			puts player[x].capture_stack.object_id		# for debugging
+			puts player[x].draw_stack.cards.length; puts "HERE" # for debugging
+			player[x].draw_stack.cards.each { |card| puts "#{card} draw stack PSOT transfer" }  # for debugging
+			player[x].capture_stack.cards = []
+			player[x].capture_stack.cards.each { |card| puts "#{card} this line won't get printed" }  # for debugging
+			player[x].draw_stack.cards.each { |card| puts "#{card} draw stack POST POST POST transfer" }  # for debugging
+			puts player[x].draw_stack.cards.length; puts "HERE again" # for debugging
+		end
+	end
+#finish this for how to perform the end-game - if there are no cards to shuffle
+# if either player has a combined draw stack or captuer stack of zero, perform end game
+# method to cut game short as necessary
 end
 
 def status (p1, p2)
@@ -174,7 +218,7 @@ full_deck.create_cards
 full_deck.shuffle
 full_deck.deal(player1.draw_stack, player2.draw_stack)
 
-16.times{ battle(player1, player2) }
+100.times{ battle(player1, player2) }
 
 puts player1.draw_stack.cards.length
 puts player2.draw_stack.cards.length
