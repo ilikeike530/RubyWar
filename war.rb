@@ -124,7 +124,10 @@ end
 
 
 def break_tie(p1, p2)  # I'm not 100% sure how this would work if one player ran out of cards on the 1st of 2nd flip during a 3x battle
-	3.times do 
+	number_of_facedown_flips = [p1.draw_stack.cards.length + p1.capture_stack.cards.length, 
+															p2.draw_stack.cards.length + p2.capture_stack.cards.length].min - 1 
+
+	[3, number_of_facedown_flips].min.times do 
 		check_and_reshuffle(p1, p2)
 		p1.stack_for_ties.cards.push(p1.draw_stack.cards.shift)
 		print "#{p1.name}'s card: #{p1.stack_for_ties.cards.last} \t│\t"
@@ -137,21 +140,30 @@ end
 
 def check_and_reshuffle(*player)
 	puts "IM INSIDE THE CHECK AND RESHUFFLE FUNCTION" # for debugging
-  (0..(player.length-1)).each do |x|
+	# (0..(player.length-1)).each do |x|	
+	# 	return if player[x].final_card_status == true
+	# end
+
+  (0..(player.length-1)).each do |x|							# If either player has no cards left, end game
 		if player[x].draw_stack.cards.length == 0 and
 		player[x].capture_stack.cards.length == 0 and
 		player[x].stack_for_ties.cards.length == 0
 			game_conclusion(player[0], player[1])
 		end
-		if player[x].draw_stack.cards.length + 
-		player[x].capture_stack.cards.length +
-		player[x].stack_for_ties.cards.length == 52
-			game_conclusion(player[0], player[1])
-		end
 	end
+	# 				# open to completely update method below - it's just a shell
+ #  (0..(player.length-1)).each do |x|							# If either player runs out of cards during a tie
+	# 	if player[x].draw_stack.cards.length == 1 and 		# break, cut battle short and flip last card
+	# 	player[x].capture_stack.cards.length == 0	and  		# BUT WHAT IF THAT LAST CARD RESULTS IN A TIE??
+	# 	player[x].stack_for_ties.cards.length > 0
+	# 		return
+	# 		end
+	# 	end
+	# end
 
-  (0..(player.length-1)).each do |x|
-		if player[x].draw_stack.cards.length == 0 and player[x].capture_stack.cards.length == 0
+  (0..(player.length-1)).each do |x|							# If either player ends a battle with a tie and 
+		if player[x].draw_stack.cards.length == 0 and 		# has no draw or capture cards left
+		player[x].capture_stack.cards.length == 0
 			(0..(player.length-1)).each do |x|
 				player[x].stack_for_ties.shuffle
 				player[x].draw_stack.cards.concat(player[x].stack_for_ties.cards)
@@ -182,8 +194,8 @@ def check_and_reshuffle(*player)
 end
 
 def status (p1, p2)
-	print "#{p1.name} has #{p1.draw_stack.cards.length} #{p1.capture_stack.cards.length} cards │\t"
-	puts "#{p2.name} has #{p2.draw_stack.cards.length} #{p2.capture_stack.cards.length} cards"
+	print "#{p1.name} has #{p1.draw_stack.cards.length} #{p1.capture_stack.cards.length} #{p1.stack_for_ties.cards.length} cards │\t"
+	puts "#{p2.name} has #{p2.draw_stack.cards.length} #{p2.capture_stack.cards.length} #{p2.stack_for_ties.cards.length} cards"
 	puts "────────────────────┼─────────────────────"
 end
 
