@@ -4,11 +4,7 @@
 #           counter " This game took 40 turns.  At 2 seconds per turn, it would have taken
 # 							20 minutes to play thisgame
 				#   List most and least cards each player had during the game
-# 	Add a graphical indicator after each turn to show how many cards are left over for each team, i.e:
-#							----------------|---------------------------
 # 	Add an automated mode "A" to Automate, "Q" to quit
-# 	Add something to make sure the lines line up based on the length of a user's name
-# 	Add a delay so the game looks cool and the line moves back and forth
 # 	
 
 
@@ -98,8 +94,10 @@ end
 
 def battle(p1, p2)
 	check_and_reshuffle(p1, p2)
-	p1.draw_card = p1.draw_stack.cards.shift; print "#{p1.name}'s card: #{p1.draw_card} " + " " * p1.name_spacer
-	p2.draw_card = p2.draw_stack.cards.shift; puts "│ #{p2.name}'s card: #{p2.draw_card}"
+	p1.draw_card = p1.draw_stack.cards.shift; 
+	print "#{p1.name}'s card: " + " " * p1.name_spacer + "#{p1.draw_card} "
+	p2.draw_card = p2.draw_stack.cards.shift; 
+	puts "│ #{p2.name}'s card: " + " " * p2.name_spacer + "#{p2.draw_card}"
 	if p1.draw_card.value > p2.draw_card.value
 		p1.capture_stack.cards.push(p1.draw_card, p2.draw_card)
 		p1.capture_stack.cards.concat(p1.stack_for_ties.cards)
@@ -130,9 +128,9 @@ def break_tie(p1, p2)
 	[3, number_of_facedown_flips].min.times do 
 		check_and_reshuffle(p1, p2)
 		p1.stack_for_ties.cards.push(p1.draw_stack.cards.shift)
-		print "‣#{p1.name}'s card:#{p1.stack_for_ties.cards.last} " + " " * p1.name_spacer
+		print "+#{p1.name}'s card:"	+ " " * p1.name_spacer + "#{p1.stack_for_ties.cards.last} " 
 		p2.stack_for_ties.cards.push(p2.draw_stack.cards.shift)
-		puts "│ ‣#{p2.name}'s card:#{p2.stack_for_ties.cards.last}"
+		puts "│ +#{p2.name}'s card:"	+ " " * p2.name_spacer + "#{p2.stack_for_ties.cards.last}"
 	end
 	battle(p1, p2)
 end
@@ -148,36 +146,40 @@ def check_and_reshuffle(*player)
 	end
 
   (0..(player.length-1)).each do |x|							# If either player ends a battle with a tie and 
-		if player[x].draw_stack.cards.length == 0 and 		# has no draw or capture cards left
-		player[x].capture_stack.cards.length == 0
+		if player[x].draw_stack.cards.length == 0 and 		# has no draw or capture cards left, shuffle
+		player[x].capture_stack.cards.length == 0					# all 3 stacks to draw stack
 			(0..(player.length-1)).each do |x|
-				player[x].stack_for_ties.shuffle
 				player[x].draw_stack.cards.concat(player[x].stack_for_ties.cards)
 				player[x].stack_for_ties.cards = []
+				player[x].draw_stack.cards.concat(player[x].capture_stack.cards)
+				player[x].capture_stack.cards = []
+				player[x].draw_stack.shuffle
 			end
+			puts "--Performed Reshuffle--│--Performed Reshuffle--"
 		end
 	end
 	
-  (0..(player.length-1)).each do |x|
-		if player[x].draw_stack.cards.length == 0
+  (0..(player.length-1)).each do |x|							# Standard shuffle - move cards to draw stack from 
+		if player[x].draw_stack.cards.length == 0					# capture stack if no cards left in draw stack
 			player[x].capture_stack.shuffle
-			player[x].draw_stack = player[x].capture_stack.dup  # I could have just used concat
+			player[x].draw_stack = player[x].capture_stack.dup  # An alternative to concat
 			player[x].capture_stack.cards = []
 		end
 	end
 end
 
 def status (p1, p2)
-	if (p1.draw_stack.cards.length + p1.capture_stack.cards.length) < 10
-		print "#{p1.name} has #{p1.draw_stack.cards.length + p1.capture_stack.cards.length} cards" + " " * (p1.name_spacer + 1)
-	else
-		print "#{p1.name} has #{p1.draw_stack.cards.length + p1.capture_stack.cards.length} cards" + " " * p1.name_spacer
-	end
-	# if (p2.draw_stack.cards.length + p2.capture_stack.cards.length) < 10
+	print "#{p1.name} has #{p1.draw_stack.cards.length + p1.capture_stack.cards.length} cards" 
+	print " " if (p1.draw_stack.cards.length + p1.capture_stack.cards.length) < 10
+	print " " * p1.name_spacer
 
+	print "│ #{p2.name} has #{p2.draw_stack.cards.length + p2.capture_stack.cards.length} cards " 
+	print " " if (p2.draw_stack.cards.length + p2.capture_stack.cards.length) < 10
+	print " " * p2.name_spacer
 
-	print "│ #{p2.name} has #{p2.draw_stack.cards.length + p2.capture_stack.cards.length} cards  " + " " * p2.name_spacer + "X"
-	puts
+	print "░" * (p1.draw_stack.cards.length + p1.capture_stack.cards.length)
+	print " █ "
+	puts "░" * (p2.draw_stack.cards.length + p2.capture_stack.cards.length)
 	puts "───────────────────────┼────────────────────────"
 end
 
@@ -231,7 +233,7 @@ full_deck.deal(player1.draw_stack, player2.draw_stack)
 
 2000.times do
 	battle(player1, player2)
-	# sleep 0.07
+	sleep 0.05
 end
 
 puts player1.draw_stack.cards.length
