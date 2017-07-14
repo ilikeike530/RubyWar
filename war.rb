@@ -1,6 +1,7 @@
 # Functionality to add:
 # 	Add an end game statement, including
 # 					Statement of who the winner was
+# =>  Add number of cards flipped *******
 #           counter " This game took 40 turns.  At 2 seconds per turn, it would have taken
 # 							20 minutes to play thisgame
 				#   List most and least cards each player had during the game
@@ -79,7 +80,9 @@ end
 
 class Player
 	
-	attr_accessor :name, :name_spacer, :draw_stack, :capture_stack, :stack_for_ties, :draw_card
+	attr_accessor :name, :name_spacer, :draw_stack, :capture_stack, :stack_for_ties, :draw_card,
+								:number_of_battles, :number_of_battles_won, :most_cards, :least_cards, 
+								:number_of_cards_flipped
 
 	def initialize(name)
 		@name = name
@@ -87,6 +90,12 @@ class Player
 		@draw_stack = Deck.new
 		@capture_stack = Deck.new
 		@stack_for_ties = Deck.new
+		@number_of_battles = 0
+		@number_of_battles_won = 0
+		@most_cards = 26
+		@least_cards = 26
+		@number_of_cards_flipped = 0
+
 	end
 end
 
@@ -105,6 +114,11 @@ def battle(p1, p2)
 		p1.stack_for_ties.cards = []
 		p2.stack_for_ties.cards = []
 		puts "  --Battle Winner--    │"
+		p1.number_of_battles += 1
+		p2.number_of_battles += 1
+		p1.number_of_battles_won += 1
+		p1.most_cards = [p1.draw_stack.cards.length + p1.capture_stack.cards.length, p1.most_cards].max
+		p2.least_cards = [p2.draw_stack.cards.length + p2.capture_stack.cards.length, p2.least_cards].min
 		status(p1,p2)
 	elsif p2.draw_card.value > p1.draw_card.value
 		p2.capture_stack.cards.push(p1.draw_card, p2.draw_card)
@@ -113,6 +127,11 @@ def battle(p1, p2)
 		p1.stack_for_ties.cards = []
 		p2.stack_for_ties.cards = []
 		puts "                       │   --Battle Winner--"
+		p1.number_of_battles += 1
+		p2.number_of_battles += 1
+		p2.number_of_battles_won += 1
+		p2.most_cards = [p2.draw_stack.cards.length + p2.capture_stack.cards.length, p2.most_cards].max
+		p1.least_cards = [p1.draw_stack.cards.length + p1.capture_stack.cards.length, p1.least_cards].min
 		status(p1,p2)
 	elsif p1.draw_card.value == p2.draw_card.value
 		p1.stack_for_ties.cards.push(p1.draw_card)
@@ -188,9 +207,15 @@ def game_conclusion(*player)
 		if player[x].draw_stack.cards.length + 
 		player[x].capture_stack.cards.length +
 		player[x].stack_for_ties.cards.length == 52
-			puts "#{player[x].name} Wins!!"
+			puts "#{player[x].name} Wins!! The game lasted #{player[x].number_of_battles} battles!"
 		end
 	end
+	(0..(player.length-1)).each do |x|
+		print "#{player[x].name} won #{player[x].number_of_battles_won} battles and had "
+		puts "between #{player[x].least_cards} and #{player[x].most_cards} cards during the game."
+	end
+
+
 	# add all the stuff about game end counts (# of turns) and statistics here
 	exit
 end
