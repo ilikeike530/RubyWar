@@ -111,42 +111,30 @@ class Games
 end
 
 def game_intro
-	puts "Welcome to War! The Card Game."
+	system "clear" or system "cls"
+	puts "╔═════════════════════════════════════════════════════════════════╗"
+	puts "║                  Welcome to War! The Card Game                  ║"
+	puts "╚═════════════════════════════════════════════════════════════════╝"
 	
-	player1_name = "XXXXXXXXXXX"
-	until player1_name.length <= 10
-		puts "(press 'Q' to Quit at any time)"
-		print "Enter your name: "
-		player1_name = gets.strip
-		player1_name.gsub!(/[^0-9a-z ]/i, '')
-
-		if player1_name.length > 10
-			puts "That name is too long.  Name must be 10 characters or less."
-		elsif player1_name.length == 0
-			puts "Since you didn't enter a name, I'll call you 'Ape H'"
-			player1 = Player.new("Ape H")
-		elsif player1_name == 'Q'
-			exit
-		else
-			player1 = Player.new(player1_name)
+	player_names = []
+	player_default_names = ["Ape H.", "Skynet"]
+	(0..1).each do |x|
+		player_names[x] = "XXXXXXXXXXXXX"
+		while player_names[x].length > 10   # when do I need a 'do'
+			print "Enter player #{(x+1)}'s name (press 'Q' to quit at any time): "
+			player_names[x] = gets.strip
+			player_names[x].gsub!(/[^0-9.a-z ]/i, '')
+			if player_names[x].length > 10
+				puts "That name is too long.  Name must be 10 characters or less."
+			end
 		end
-
-	print "Enter your opponents name (hit 'Enter' to default to 'Computer'): "
-	player2_name = gets.strip
-	player2_name.gsub!(/[^0-9a-z ]/i, '')
-
-	if player2_name.length > 10
-		puts "That name is too long.  Next time enter a name 10 characters or less."
-		exit
-	elsif player2_name.length == 0
-		player2 = Player.new("Skynet")
-	elsif player2_name == 'Q'
-		exit
-	else 
-		player2 = Player.new(player2_name)
+		exit if player_names[x] == "Q" or player_names[x] == "q"
+		if player_names[x].length == 0
+			puts "Since you didn't enter a name, player #{(x+1)} will be known as '#{player_default_names[x]}'"
+			player_names[x] = player_default_names[x]
+		end
 	end
-	# player1 = Player.new("Ape H.")
-	# player2 = Player.new("Skynet")
+	war_games = Games.new(2, player_names)
 end
 
 def battle(p1, p2)
