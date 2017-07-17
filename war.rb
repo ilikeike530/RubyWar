@@ -76,7 +76,8 @@ class Player
 	
 	attr_accessor :name, :name_spacer, :draw_stack, :capture_stack, :stack_for_ties, :draw_card,
 								:number_of_battles, :number_of_battles_won, :most_cards, :least_cards, 
-								:number_of_cards_flipped, :number_of_unique_shuffles
+								:number_of_cards_flipped, :number_of_unique_shuffles,
+								:wins, :losses
 
 	def initialize(name)
 		@name = name
@@ -90,7 +91,62 @@ class Player
 		@least_cards = 26
 		@number_of_cards_flipped = 0
 		@number_of_unique_shuffles = 0
+		@wins = 0
+		@losses = 0
 	end
+end
+
+class Games
+
+	attr_accessor :players, :number_of_rounds, :total_time_saved
+
+	def initialize(number_of_players, player_names)
+		@players = []
+		(0..(number_of_players-1)).each do |x|
+			@players[x] = Player.new(player_names[x])
+		end
+		@number_of_rounds = 0
+		@total_time_saved = 0
+	end
+end
+
+def game_intro
+	puts "Welcome to War! The Card Game."
+	
+	player1_name = "XXXXXXXXXXX"
+	until player1_name.length <= 10
+		puts "(press 'Q' to Quit at any time)"
+		print "Enter your name: "
+		player1_name = gets.strip
+		player1_name.gsub!(/[^0-9a-z ]/i, '')
+
+		if player1_name.length > 10
+			puts "That name is too long.  Name must be 10 characters or less."
+		elsif player1_name.length == 0
+			puts "Since you didn't enter a name, I'll call you 'Ape H'"
+			player1 = Player.new("Ape H")
+		elsif player1_name == 'Q'
+			exit
+		else
+			player1 = Player.new(player1_name)
+		end
+
+	print "Enter your opponents name (hit 'Enter' to default to 'Computer'): "
+	player2_name = gets.strip
+	player2_name.gsub!(/[^0-9a-z ]/i, '')
+
+	if player2_name.length > 10
+		puts "That name is too long.  Next time enter a name 10 characters or less."
+		exit
+	elsif player2_name.length == 0
+		player2 = Player.new("Skynet")
+	elsif player2_name == 'Q'
+		exit
+	else 
+		player2 = Player.new(player2_name)
+	end
+	# player1 = Player.new("Ape H.")
+	# player2 = Player.new("Skynet")
 end
 
 def battle(p1, p2)
@@ -236,41 +292,7 @@ def game_conclusion(*player)
 end
 
 
-puts "Welcome to War! The Card Game."
-puts "(press 'Q' to Quit at any time)"
-print "Enter your name: "
-input = gets.strip
-input.gsub!(/[^0-9a-z ]/i, '')
-
-if input.length > 10
-	puts "That name is too long.  Next time enter a name 10 characters or less."
-	exit
-elsif input.length == 0
-	puts "Since you didn't enter a name, I'll call you 'Ape H.'"
-	player1 = Player.new("Ape H.")
-elsif input == 'Q'
-	exit
-else
-	player1 = Player.new(input)
-end
-
-print "Enter your opponents name (hit 'Enter' to default to 'Computer'): "
-input = gets.strip
-input.gsub!(/[^0-9a-z ]/i, '')
-
-if input.length > 10
-	puts "That name is too long.  Next time enter a name 10 characters or less."
-	exit
-elsif input.length == 0
-	player2 = Player.new("Skynet")
-elsif input == 'Q'
-	exit
-else 
-	player2 = Player.new(input)
-end
-
-# player1 = Player.new("Ape H.")
-# player2 = Player.new("Skynet")
+game_intro
 
 full_deck = Deck.new
 full_deck.create_cards
