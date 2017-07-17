@@ -1,6 +1,6 @@
 # Functionality to add:
-# 	Add an automated mode "A" to Automate, "Q" to quit
-# 	
+# 	allow user to repeat game with current names, and keep a running count of wins and losses and 
+# 	total time played
 
 require_relative 'calculate_time'
 
@@ -107,12 +107,15 @@ def battle(p1, p2)
 		p1.capture_stack.cards.concat(p2.stack_for_ties.cards)
 		p1.stack_for_ties.cards = []
 		p2.stack_for_ties.cards = []
-		puts "  --Battle Winner--    │"
 		p1.number_of_battles += 1
 		p2.number_of_battles += 1
 		p1.number_of_battles_won += 1
 		p1.most_cards = [p1.draw_stack.cards.length + p1.capture_stack.cards.length, p1.most_cards].max
 		p2.least_cards = [p2.draw_stack.cards.length + p2.capture_stack.cards.length, p2.least_cards].min
+		print "  --Battle Winner--    │" 
+		# print	"                          P1 range: #{p1.least_cards} to #{p1.most_cards}"  	# for debugging
+		# print	"    P2 range: #{p2.least_cards} to #{p2.most_cards}"  												# for debugging
+		puts
 		status(p1,p2)
 	elsif p2.draw_card.value > p1.draw_card.value
 		p2.capture_stack.cards.push(p1.draw_card, p2.draw_card)
@@ -120,12 +123,15 @@ def battle(p1, p2)
 		p2.capture_stack.cards.concat(p2.stack_for_ties.cards)
 		p1.stack_for_ties.cards = []
 		p2.stack_for_ties.cards = []
-		puts "                       │   --Battle Winner--"
 		p1.number_of_battles += 1
 		p2.number_of_battles += 1
 		p2.number_of_battles_won += 1
 		p2.most_cards = [p2.draw_stack.cards.length + p2.capture_stack.cards.length, p2.most_cards].max
 		p1.least_cards = [p1.draw_stack.cards.length + p1.capture_stack.cards.length, p1.least_cards].min
+		print "                       │   --Battle Winner--"   
+		# print "      P1 range: #{p1.least_cards} to #{p1.most_cards}" 												# for debugging
+		# print "    P2 range: #{p2.least_cards} to #{p2.most_cards}"  													# for debugging
+		puts
 		status(p1,p2)
 	elsif p1.draw_card.value == p2.draw_card.value
 		p1.stack_for_ties.cards.push(p1.draw_card)
@@ -224,60 +230,65 @@ def game_conclusion(*player)
 	print "    + If you had used a real deck of cards, it would have taken you "
 	puts TimeCalculation.seconds_to_words(player[0].number_of_cards_flipped * 3 + 
 		player[0].number_of_unique_shuffles * 10 + player[1].number_of_unique_shuffles * 10)
-	print "       to play this game (assuming 3 seconds per battle and 10 seconds for each shuffle)"
+	puts "       to play this game (assuming 3 seconds per battle and 10 seconds for each shuffle)"
 	puts
 	exit
 end
 
 
-# puts "Welcome to War! The Card Game."
-# puts "(press 'Q' to Quit at any time)"
-# print "Enter your name: "
-# input = gets
-# if input.length > 10
-# 	puts "That name is too long.  Next time enter a name 10 characters or less."
-# 	exit
-# elsif input.length==0
-# 	puts "Since you didn't enter a name, I'll call you 'Ape H.'"
-# 	player1 = Player.new("Ape")
-# elsif input == 'Q'
-# 	exit
-# else 
-# 	player1 = Player.new(input)
-# end
-# print "Enter your opponents name (hit 'Enter' to default to 'Computer'): "
-# input = gets
-# if input.length > 10
-# 	puts "That name is too long.  Next time enter a name 10 characters or less."
-# 	exit
-# if input.length==0
-# 	player2 = Player.new("Skynet")
-# elsif input == 'Q'
-# 	exit
-# else 
-# 	player2 = Player.new(input)
+puts "Welcome to War! The Card Game."
+puts "(press 'Q' to Quit at any time)"
+print "Enter your name: "
+input = gets.strip
+input.gsub!(/[^0-9a-z ]/i, '')
 
-player1 = Player.new("Ape H.")
-player2 = Player.new("Skynet")
+if input.length > 10
+	puts "That name is too long.  Next time enter a name 10 characters or less."
+	exit
+elsif input.length == 0
+	puts "Since you didn't enter a name, I'll call you 'Ape H.'"
+	player1 = Player.new("Ape H.")
+elsif input == 'Q'
+	exit
+else
+	player1 = Player.new(input)
+end
+
+print "Enter your opponents name (hit 'Enter' to default to 'Computer'): "
+input = gets.strip
+input.gsub!(/[^0-9a-z ]/i, '')
+
+if input.length > 10
+	puts "That name is too long.  Next time enter a name 10 characters or less."
+	exit
+elsif input.length == 0
+	player2 = Player.new("Skynet")
+elsif input == 'Q'
+	exit
+else 
+	player2 = Player.new(input)
+end
+
+# player1 = Player.new("Ape H.")
+# player2 = Player.new("Skynet")
 
 full_deck = Deck.new
 full_deck.create_cards
 full_deck.shuffle
 full_deck.deal(player1.draw_stack, player2.draw_stack)
 
-2000.times do
-	battle(player1, player2)
-	sleep 0.05
+while true
+	print "                       │ Press <Enter> to Battle or better yet, 'A' to Automate the game: "
+	input = gets.strip
+	input.gsub!(/[^0-9a-z ]/i, '')
+	if input.length == 0
+		battle(player1, player2)
+	elsif input == 'A' or input == 'a'
+		20000.times do
+			battle(player1, player2)
+			sleep 0.05
+		end
+	end
 end
-
-puts player1.draw_stack.cards.length
-puts player2.draw_stack.cards.length
-puts player1.capture_stack.cards.length
-puts player2.capture_stack.cards.length
-
-# player1.draw_stack.each { |x| puts x }
-
-
-
 
 
