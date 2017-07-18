@@ -54,7 +54,8 @@ class Deck
 		@cards = temp_deck
 	end
 
-	def deal (deck1, deck2)
+	def deal (game)
+	# def deal (deck1, deck2)
 		while @cards.length > 0 do
 			temp_card = @cards.shift
 			if deck1.cards.length > deck2.cards.length
@@ -74,31 +75,40 @@ end
 
 class Player
 	
-	attr_accessor :name, :name_spacer, :draw_stack, :capture_stack, :stack_for_ties, :draw_card,
-								:number_of_battles, :number_of_battles_won, :most_cards, :least_cards, 
-								:number_of_cards_flipped, :number_of_unique_shuffles,
-								:wins, :losses
+	attr_accessor :name, :name_spacer, :rounds_won, :rounds_lost
 
 	def initialize(name)
 		@name = name
 		@name_spacer = 10 - name.length
+		@rounds_won = []
+		@rounds_lost = []
+	end
+end
+
+class Round
+	
+	attr_accessor :draw_stack, :capture_stack, :stack_for_ties, :draw_card,
+								:number_of_battles, :number_of_cards_flipped, :number_of_unique_shuffles,
+								:number_of_battles_won, :most_cards, :least_cards, # by_player attributes
+
+	def initialize(name)
 		@draw_stack = Deck.new
 		@capture_stack = Deck.new
 		@stack_for_ties = Deck.new
 		@number_of_battles = 0
-		@number_of_battles_won = 0
-		@most_cards = 26
-		@least_cards = 26
 		@number_of_cards_flipped = 0
 		@number_of_unique_shuffles = 0
-		@wins = 0
-		@losses = 0
+		@number_of_battles_won = []
+		@most_cards = [26,26]
+		@least_cards = [26,26]
 	end
+
 end
 
-class Games
 
-	attr_accessor :players, :number_of_rounds, :total_time_saved
+class Game
+
+	attr_accessor :player, :round, :total_time_saved
 
 	def initialize(number_of_players, player_names)
 		@players = []
@@ -112,30 +122,49 @@ end
 
 def game_intro
 	system "clear" or system "cls"
-	puts "╔═════════════════════════════════════════════════════════════════╗"
-	puts "║                  Welcome to War! The Card Game                  ║"
-	puts "╚═════════════════════════════════════════════════════════════════╝"
+	puts "╔═══════════════════════════════════════════════════════════════════════════╗"
+	puts "║                       Welcome to War! The Card Game                       ║"
+	puts "╚═══════════════════════════════════════════════════════════════════════════╝"
 	
 	player_names = []
 	player_default_names = ["Ape H.", "Skynet"]
 	(0..1).each do |x|
-		player_names[x] = "XXXXXXXXXXXXX"
-		while player_names[x].length > 10   # when do I need a 'do'
-			print "Enter player #{(x+1)}'s name (press 'Q' to quit at any time): "
+		loop do 
+			print "Enter a name for player #{(x+1)} (or press 'Q' to quit at any time): "
 			player_names[x] = gets.strip
 			player_names[x].gsub!(/[^0-9.a-z ]/i, '')
-			if player_names[x].length > 10
-				puts "That name is too long.  Name must be 10 characters or less."
-			end
+			exit if player_names[x] == "Q" or player_names[x] == "q"
+			break if player_names[x].length <= 10
+			puts "That name is too long.  Name must be 10 characters or less."
 		end
-		exit if player_names[x] == "Q" or player_names[x] == "q"
 		if player_names[x].length == 0
 			puts "Since you didn't enter a name, player #{(x+1)} will be known as '#{player_default_names[x]}'"
 			player_names[x] = player_default_names[x]
 		end
 	end
-	war_games = Games.new(2, player_names)
+	war = Game.new(2, player_names)
 end
+
+def play_round
+	full_deck = Deck.new
+	full_deck.create_cards
+	full_deck.shuffle
+	full_deck.deal(war)
+	# full_deck.deal(war.players[0].draw_stack, war.players[1].draw_stack)
+		loop do   			
+		print "                       │ Press <Enter> to Battle or better yet, 'A' to Automate the game: "
+		input = gets.strip
+		input.gsub!(/[^0-9a-z ]/i, '')
+		battle(war) if input.length == 0
+		if input == 'A' or input == 'a'
+			loop do
+				battle(war)
+				sleep 0.05
+			end
+		end
+	end
+end
+
 
 def battle(p1, p2)
 	check_and_reshuffle(p1, p2)
@@ -248,7 +277,7 @@ def status (p1, p2)
 	puts "───────────────────────┼────────────────────────────────────────────────────────────────────────────────┘"
 end
 
-def game_conclusion(*player)
+def game_conclusion(*player)  # I need to create a round_conclusion as well
 	puts "───────────────────────┴────────────────────────────────────────────────────────────────────────────────"
 	(0..(player.length-1)).each do |x|
 		if player[x].draw_stack.cards.length + 
@@ -279,26 +308,8 @@ def game_conclusion(*player)
 	exit
 end
 
+#============================================================================================
+#============================================================================================
 
 game_intro
-
-full_deck = Deck.new
-full_deck.create_cards
-full_deck.shuffle
-full_deck.deal(player1.draw_stack, player2.draw_stack)
-
-while true
-	print "                       │ Press <Enter> to Battle or better yet, 'A' to Automate the game: "
-	input = gets.strip
-	input.gsub!(/[^0-9a-z ]/i, '')
-	if input.length == 0
-		battle(player1, player2)
-	elsif input == 'A' or input == 'a'
-		20000.times do
-			battle(player1, player2)
-			sleep 0.05
-		end
-	end
-end
-
-
+loop {play_round}
