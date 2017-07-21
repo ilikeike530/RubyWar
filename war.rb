@@ -1,6 +1,3 @@
-# Functionality to add:
-# 	allow user to repeat game with current names, and keep a running count of wins and losses and 
-# 	total time played
 
 require_relative 'calculate_time'
 
@@ -56,8 +53,8 @@ class Deck
 
 	def deal (war)
 		until @cards.length == 0 do
-			war.player[0].draw_stack.push @cards.shift
-			war.player[1].draw_stack.push @cards.shift
+			war.player[0].draw_stack.cards.push @cards.shift
+			war.player[1].draw_stack.cards.push @cards.shift
 		end
 	end
 
@@ -93,13 +90,13 @@ end
 class Round
 	
 	attr_accessor :number_of_battles, :number_of_cards_flipped, :number_of_unique_shuffles,
-								# :round_continues
+								:round_continues
 
-	def initialize(name)
+	def initialize
 		@number_of_battles = 0
 		@number_of_cards_flipped = 0
 		@number_of_unique_shuffles = 0
-		# @round_continues = true
+		@round_continues = true
 	end
 end
 
@@ -107,9 +104,9 @@ class Game
 
 	attr_accessor :player, :round, :total_time_saved, :number_of_rounds
 
-	def initialize(number_of_players, player_names)
+	def initialize(player_names)
 		@player = []
-		(0..(number_of_players-1)).each do |x|
+		(0..1).each do |x|
 			@player[x] = Player.new(player_names[x])
 		end
 		@total_time_saved = 0
@@ -127,6 +124,7 @@ def play_round(war)
 	war.player[1].clean_slate_for_new_round
 	full_deck.deal(war)
 	loop do
+		break if war.round.round_continues == false
 		print "                       │ Press <Enter> to battle, or better yet press 'A' to Automate the game: "
 		input = gets.strip
 		input.gsub!(/[^0-9a-z ]/i, '')
@@ -134,6 +132,7 @@ def play_round(war)
 		battle(war) if input.length == 0
 		if input == 'A' or input == 'a'
 			loop do
+				break if war.round.round_continues == false
 				battle(war)
 				sleep 0.05
 			end
@@ -144,39 +143,41 @@ end
 
 def battle(war)
 	check_and_reshuffle(war)
-	(0..1).each do |x|
-		war.player[x].draw_card = war.player[x].draw_stack.cards.shift
-		print "│ " if x == 1
-		print "#{war.player[x].name}'s card: #{" " * war.player[x].name_spacer}#{war.player[x].draw_card} "
-		puts if x == 1
-	end
-	war.round.number_of_cards_flipped += 1
-	if war.player[0].draw_card.value != war.player[1].draw_card.value
-		if war.player[0].draw_card.value > war.player[1].draw_card.value
-			winner = 0; loser = 1
-			print "  --Battle Winner--    │" 
-		elsif war.player[0].draw_card.value < war.player[1].draw_card.value
-			winner = 1; loser = 0
-			print "                       │   --Battle Winner--"
+	if war.round.round_continues == true
+		(0..1).each do |x|
+			war.player[x].draw_card = war.player[x].draw_stack.cards.shift
+			print "│ " if x == 1
+			print "#{war.player[x].name}'s card: #{" " * war.player[x].name_spacer}#{war.player[x].draw_card} "
+			puts if x == 1
 		end
-		war.player[winner].capture_stack.cards.push(war.player[0].draw_card, war.player[1].draw_card)
-		war.player[winner].capture_stack.cards.concat(war.player[0].stack_for_ties.cards)
-		war.player[winner].capture_stack.cards.concat(war.player[1].stack_for_ties.cards)
-		war.player[0].stack_for_ties.cards = []
-		war.player[1].stack_for_ties.cards = []
-		war.round.number_of_battles += 1
-		war.player[winner].number_of_battles_won += 1
-		war.player[winner].most_cards = [war.player[winner].draw_stack.cards.length + war.player[winner].capture_stack.cards.length, war.player[winner].most_cards].max
-		war.player[loser].least_cards = [war.player[loser].draw_stack.cards.length + war.player[loser].capture_stack.cards.length, war.player[loser].least_cards].min
-		print "                    " if winner == 0																						# for debugging
-		print	"      P1 range: #{war.player[0].least_cards} to #{war.player[0].most_cards}"  	# for debugging
-		print	"    P2 range: #{war.player[1].least_cards} to #{war.player[1].most_cards}"  		# for debugging
-		puts
-		status(war)
-	elsif war.player[0].draw_card.value == war.player[1].draw_card.value
-		war.player[0].stack_for_ties.cards.push(war.player[0].draw_card)
-		war.player[1].stack_for_ties.cards.push(war.player[1].draw_card)
-		break_tie(war)
+		war.round.number_of_cards_flipped += 1
+		if war.player[0].draw_card.value != war.player[1].draw_card.value
+			if war.player[0].draw_card.value > war.player[1].draw_card.value
+				winner = 0; loser = 1
+				print "  --Battle Winner--    │" 
+			elsif war.player[0].draw_card.value < war.player[1].draw_card.value
+				winner = 1; loser = 0
+				print "                       │   --Battle Winner--"
+			end
+			war.player[winner].capture_stack.cards.push(war.player[0].draw_card, war.player[1].draw_card)
+			war.player[winner].capture_stack.cards.concat(war.player[0].stack_for_ties.cards)
+			war.player[winner].capture_stack.cards.concat(war.player[1].stack_for_ties.cards)
+			war.player[0].stack_for_ties.cards = []
+			war.player[1].stack_for_ties.cards = []
+			war.round.number_of_battles += 1
+			war.player[winner].number_of_battles_won += 1
+			war.player[winner].most_cards = [war.player[winner].draw_stack.cards.length + war.player[winner].capture_stack.cards.length, war.player[winner].most_cards].max
+			war.player[loser].least_cards = [war.player[loser].draw_stack.cards.length + war.player[loser].capture_stack.cards.length, war.player[loser].least_cards].min
+			# print "                    " if winner == 0																						# for debugging
+			# print	"      P1 range: #{war.player[0].least_cards} to #{war.player[0].most_cards}"  	# for debugging
+			# print	"    P2 range: #{war.player[1].least_cards} to #{war.player[1].most_cards}"  		# for debugging
+			puts
+			status(war)
+		elsif war.player[0].draw_card.value == war.player[1].draw_card.value
+			war.player[0].stack_for_ties.cards.push(war.player[0].draw_card)
+			war.player[1].stack_for_ties.cards.push(war.player[1].draw_card)
+			break_tie(war)
+		end
 	end
 end
 
@@ -204,8 +205,9 @@ def check_and_reshuffle(war)
 	end
 
   (0..1).each do |x|																			# If either player ends a battle with a tie and 
-		if war.player[x].draw_stack.cards.length == 0 and 		# has no draw or capture cards left, shuffle
-			war.player[x].capture_stack.cards.length == 0				# all 3 stacks to draw stack
+  	break if war.round.round_continues == false						# has no draw or capture cards left, shuffle
+		if war.player[x].draw_stack.cards.length == 0 and 		# all 3 stacks to draw stack
+			war.player[x].capture_stack.cards.length == 0				
 			(0..1).each do |x|
 				war.player[x].draw_stack.cards.concat(war.player[x].stack_for_ties.cards)
 				war.player[x].stack_for_ties.cards = []
@@ -219,7 +221,8 @@ def check_and_reshuffle(war)
 	end
 	
   (0..1).each do |x|																			# Standard shuffle - move cards to draw stack from 
-		if war.player[x].draw_stack.cards.length == 0					# capture stack if no cards left in draw stack
+  	break if war.round.round_continues == false						# capture stack if no cards left in draw stack
+		if war.player[x].draw_stack.cards.length == 0					
 			war.player[x].capture_stack.shuffle
 			war.player[x].draw_stack = war.player[x].capture_stack.dup  # An alternative to concat
 			war.player[x].capture_stack.cards = []
@@ -249,40 +252,44 @@ def round_conclusion(war)
 		if war.player[x].draw_stack.cards.length + 
 			war.player[x].capture_stack.cards.length +
 			war.player[x].stack_for_ties.cards.length == 52
-			1.times {puts ("   #{war.player[x].name} Wins the Round!!" + " " * war.player[x].name_spacer) * 4}
+			1.times {puts ("       #{war.player[x].name} Wins the Round!!" + " " * war.player[x].name_spacer) * 3}
+			war.player[x].rounds_won += 1
 		end
 	end
 	war.number_of_rounds += 1
 	temp_round_time = war.round.number_of_cards_flipped * 3 + war.round.number_of_unique_shuffles * 10
 	war.total_time_saved += temp_round_time
 	puts "────────────────────────────────────────────────────────────────────────────────────────────────────────"
+	puts "────────────────────────────────────────────────────────────────────────────────────────────────────────"
+	puts
 	puts "ROUND #{war.number_of_rounds} STATISTICS:"
-	puts "───────────────────"
+	puts "────────────────────────────────────────────────────────────────────────────────────────────────────────"
 	puts "    + A total of #{war.round.number_of_battles} battles were waged"
 	puts
 	puts "    + Each player flipped a total of #{war.round.number_of_cards_flipped} cards"
 	puts 
 	(0..1).each do |x|
 		print "    + #{war.player[x].name} won #{war.player[x].number_of_battles_won} battles and had "
-		puts "between #{war.player[x].least_cards} and #{player[x].most_cards} cards during the game."
+		puts "between #{war.player[x].least_cards} and #{war.player[x].most_cards} cards during the game."
 		puts
 	end
 	print "    + If you had used a real deck of cards, the round would have taken you "
 	puts TimeCalculation.seconds_to_words(temp_round_time)
 	puts "       to play this game (assuming 3 seconds per battle and 10 seconds for each shuffle)"
 	puts
-	puts "────────────────────────────────────────────────────────────────────────────────────────────────────────"
 	puts "OVERALL GAME STATISTICS:"
-	puts "────────────────────────"
+	puts "────────────────────────────────────────────────────────────────────────────────────────────────────────"
 	(0..1).each do |x|
 		puts "    + #{war.player[x].name}'s record is #{war.player[x].rounds_won} wins and #{war.number_of_rounds - war.player[x].rounds_won} losses"
 		puts
 	end
-	print "    + If you had used a real deck of cards, the game so far would have taken you "
-	puts TimeCalculation.seconds_to_words(war.total_time_saved)
-	puts "       to play this game (assuming 3 seconds per battle and 10 seconds for each shuffle)"
+	puts "    + Total time saved: #{TimeCalculation.seconds_to_words(war.total_time_saved)}"
 	puts
-	war.round.round_continues = false  # DO I NEED THIS?? and the associated round attribute, round_continues?
+	puts "────────────────────────────────────────────────────────────────────────────────────────────────────────"
+	puts "  ↓ START OF ROUND #{war.number_of_rounds+1} ↓ " * 4
+	puts "────────────────────────────────────────────────────────────────────────────────────────────────────────"
+	puts
+	war.round.round_continues = false
 end
 
 
@@ -311,5 +318,5 @@ player_default_names = ["Ape H.", "Skynet"]
 	end
 end
 
-war = Game.new(2, player_names)
+war = Game.new(player_names)
 loop {play_round war}
