@@ -2,6 +2,7 @@ War! The Card Game
 -------------------------
 
 Overview
+
 This game will simulate the game of war - the card game where each player filps 
 the top card and the player with the highest card wins and takes the opponents
 card(s).  If the cards are tied, 3 cards a placed face down, and a 4th face up. The
